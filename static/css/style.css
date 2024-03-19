@@ -11,7 +11,7 @@
 
 body {
     font-family: "Outfit", sans-serif;
-    background-image: url("wallpaper.jpg");
+    background-image: url("/static/wallpaper.jpg");
     background-repeat: no-repeat;
     background-size: cover;
     color: #130403;
