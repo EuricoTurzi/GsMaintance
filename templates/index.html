@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Manutenção</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='header.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="/static/logo-int.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    {% include 'header.html' %}
+    <div class="center-container">
+        <div class="container">
+            <h1>FORMULÁRIO DE MANUTENÇÃO</h1>
+            
+            <form action="/home" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="protocolo" id="protocolo" value="{{ protocolo }}">
+                
+                <label for="nomeCliente">Nome do Cliente:</label>
+                <input type="text" id="nomeCliente" name="nomeCliente" required><br><br>
+                
+                <label for="motivo">Motivo:</label>
+                <select id="motivo" name="selected_option_text" required>
+                    <option value="" disabled selected hidden>Selecione o motivo</option>
+                    <option value="manutencao">Manutenção</option>
+                    <option value="devolucao_estoque">Devolução/Estoque</option>
+                </select>
+                </select><br><br>
+                
+                <label for="modelo">Modelo:</label>
+                <input type="text" id="modelo" name="modelo" required><br><br>
+                
+                <label for="customizacao">Customização:</label>
+                <input type="text" id="customizacao" name="customizacao" required><br><br>
+                
+                <label for="ids">ID:</label>
+                <input type="text" id="ids" name="ids" required><br><br>
+                
+                <label for="tipoProblema">Tipo de Problema:</label>
+                <select name="tipoProblema" id="tipoProblema">
+                    <option value="Oxidação">Oxidação</option>
+                    <option value="Placa Danificada">Placa Danificada</option>
+                    <option value="USB Danificado">USB Danificado</option>
+                    <option value="Botão de Acionamento Danificado">Botão de Acionamento Danificado</option>
+                    <option value="Antena LoRA Danificada">Antena LoRA Danificada</option>
+                    <option value="Sem problemas identificados">Sem problemas identificados</option>
+                </select><br><br>
+                
+                <label for="photos">Fotos Anexadas:</label>
+                <input type="file" id="photos" name="photos" accept="image/png, image/jpeg" multiple required><br><br>
+                
+                <label for="tratativa">Tratativa:</label>
+                <select name="tratativa" id="tratativa">
+                    <option value="Tratativa Oxidação">Oxidação</option>
+                    <option value="Tratativa Placa Danificada">Placa Danificada</option>
+                    <option value="Tratativa USB Danificado">USB Danificado</option>
+                    <option value="Tratativa Botão de Acionamento Danificado">Botão de Acionamento Danificado</option>
+                    <option value="Tratativa Antena LoRA Danificada">Antena LoRA Danificada</option>
+                    <option value="Tratativa Sem problemas identificados">Sem problemas identificados</option>
+                </select><br><br>
+                
+                <div class="popup" id="notificationPopup">
+                    <p>PDF de manutenção gerado com sucesso!</p>
+                    <a href="{{ url_for('download_pdf') }}">Baixar PDF</a>
+                </div>
+                
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+    </div>
+
+    {% if success_message %}
+    <script>
+        // Função para mostrar o alerta do SweetAlert2
+        function showAlert(message, type) {
+            Swal.fire({
+                title: message,
+                icon: type,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+
+        // Chame a função ao carregar a página
+        window.onload = function() {
+            showAlert('{{ success_message }}', 'success');
+        };
+    </script>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,146 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Red+Hat+Display:wght@500;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.navbar {
+    background: linear-gradient(to right, #e6a500, #a07302);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80px;
+}
+
+.nav-links {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+}
+
+.nav-links li {
+    margin: 0 10px;
+}
+
+.nav-links li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.nav-links li a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 5px;
+}
+
+.logo {
+    margin-right: auto;
+    padding: 0 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+    font-family: 'Outfit', sans-serif;
+}
+
+.logo:hover {
+    color: #fff;
+}
+
+.call-to-action {
+    background-color: #fff;
+    color: #ff5f5f;
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-family: 'Red Hat Display', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.call-to-action:hover {
+    background-color: #ff0080;
+    color: #fff;
+}
+
+/* Media queries para tornar responsivo */
+
+/* Para telas menores que 768px (tablets em modo paisagem) */
+@media screen and (max-width: 768px) {
+    .navbar {
+        height: auto;
+    }
+
+    .nav-links {
+        display: none;
+        justify-content: space-around;
+        width: 100%;
+    }
+
+    .nav-links li {
+        margin: 10px 0;
+    }
+
+    .nav-links li a {
+        display: block;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        color: white;
+        background-color: #a07302;
+        text-decoration: none;
+    }
+
+    .logo {
+        margin: 10px;
+    }
+
+    .call-to-action {
+        display: none;
+    }
+}
+
+/* Para telas menores que 480px (smartphones) */
+@media screen and (max-width: 480px) {
+    .navbar {
+        height: auto;
+    }
+
+    .nav-links {
+        display: none;
+        justify-content: space-around;
+        width: 100%;
+    }
+
+    .nav-links li {
+        margin: 10px 0;
+    }
+
+    .nav-links li a {
+        display: block;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        color: white;
+        background-color: #a07302;
+        text-decoration: none;
+    }
+
+    .logo {
+        margin: 10px;
+    }
+
+    .call-to-action {
+        display: none;
+    }
+}
