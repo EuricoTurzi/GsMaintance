@@ -10,7 +10,7 @@
 
 body {
     font-family: "Outfit", sans-serif;
-    background-image: url("/static/img/wallpaper.jpg");
+    background-image: url("../img/wallpaper.jpg");
     background-repeat: no-repeat;
     background-size: cover;
     color: #000;
@@ -119,14 +119,22 @@ body {
     position: relative;
 }
 
-.card form button::after {
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    font-size: 20px;
+.card input {
+    background-color: #e6a500;
+    border: none;
+    border-radius: 5px;
     color: #fff;
-    opacity: 0;
-    transition: opacity 0.3s;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 10px 0;
+    width: 100%;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+    position: relative;
+}
+
+.card input:hover {
+    background-color: #a07302;
 }
 
 .card form button:hover {
@@ -135,6 +143,10 @@ body {
 
 .card form button:hover::after {
     opacity: 1;
+}
+
+.card select {
+    margin-bottom: 20px;
 }
 
 .btn-download {
@@ -146,6 +158,49 @@ body {
 .btn-download img {
     width: 100%;
     height: 100%;
+}
+
+.search-container {
+    margin: 20px;
+}
+
+#search-input {
+    padding: 10px 20px 10px 40px; /* Ajuste o padding para acomodar o ícone */
+    width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    background-image: url('../img/lupa.png'); /* Caminho para o ícone de lupa */
+    background-size: 20px; /* Tamanho do ícone */
+    background-position: 10px center; /* Posição do ícone */
+    background-repeat: no-repeat; /* Não repetir o ícone */
+}
+
+#search-input:focus {
+    outline: none;
+    border-color: dodgerblue;
+}
+
+/* Estilos para a Div de Carregamento */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none;
+}
+
+.loading-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
 }
 
 @media (max-width: 768px) {

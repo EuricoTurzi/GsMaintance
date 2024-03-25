@@ -75,7 +75,6 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def generate_maintenance_pdf(data):
-    # Gerando o nome do arquivo PDF com base no protocolo, cliente e data
     agora = datetime.now()
     datinha = agora.strftime("%d-%m-%Y")
     
@@ -114,75 +113,28 @@ def generate_maintenance_pdf(data):
     
     elements.append(Paragraph(f"<b>ID:</b> {data['ids']}", styles['BodyText']))
     
-    # Adicionando o Tipo de Problema
+    elements.append(Paragraph(f"<b>Faturamento:</b> {data['faturamento']}", styles['BodyText']))
+    
     elements.append(Paragraph(f"<b>Tipo de Problema:</b> {data['tipoProblema']}", styles['BodyText']))
     
     elements.append(Spacer(1, 12))
     
-    # Adicionando o Tipo de Problema
+    # Lendo o conteúdo dos arquivos txt de acordo com o tipo de problema
     tipo_problema = data['tipoProblema']
     tipo_problema_texts = {
-        'Oxidação': """
-            Prezado Cliente,<br/>
-            Gostaríamos de informar sobre a manutenção realizada em seu equipamento eletrônico, no qual constatamos a presença de oxidação na placa eletrônica.<br/><br/>
-            <b>Motivo da Manutenção:</b><br/>
-            Durante nossa análise minuciosa, identificamos que a presença de oxidação na placa eletrônica foi o motivo principal das falhas e problemas que o equipamento vinha apresentando. A oxidação é um processo natural, mas, neste caso, observamos que ela foi acelerada devido a condições que indicam um uso inadequado ou exposição a ambientes não recomendados.<br/><br/>
-            <b>Causa: Mal Uso ou Ambiente Inadequado:</b><br/>
-            A oxidação pode ser resultado de ambientes úmidos, contato com líquidos ou substâncias corrosivas. Com base em nossa análise, parece que o equipamento pode ter sido exposto a condições que favoreceram esse processo. Entendemos que isso pode não ter sido intencional, mas é importante destacar que ambientes não adequados ou manuseio impróprio podem acelerar a oxidação e causar danos aos componentes eletrônicos.<br/><br/>
-            <b>Consequências da Oxidação:</b><br/>
-            A presença de oxidação na placa eletrônica pode levar a problemas como mau contato, falhas intermitentes e até mesmo danos irreversíveis em componentes vitais. Isso pode resultar em mau funcionamento do equipamento, perda de desempenho e, em casos mais graves, a necessidade de substituição de peças ou do próprio equipamento.
-        """,
-        'Placa Danificada': """
-            Prezado Cliente,<br/>
-            Gostaríamos de informar sobre a manutenção realizada em seu equipamento eletrônico, no qual constatamos dano físico ao equipamento.<br/><br/>
-            <b>Motivo da Manutenção:</b><br/>
-            Durante a inspeção cuidadosa do equipamento, identificamos que ele apresenta danos físicos significativos. Após uma análise minuciosa, constatamos que o dano foi ocasionado devido ao excesso de peso ou manuseio incorreto do equipamento.<br/><br/>
-            <b>Causa: Mal uso ou excesso de peso.</b><br/>
-            Com base em nossa análise, parece que o equipamento pode ter sido exposto a condições que favoreceram esse processo. Entendemos que isso pode não ter sido intencional, mas é importante destacar que ambientes não adequados ou manuseio impróprio do equipamento pode ocasionar tais problemas.<br/><br/>
-            <b>Consequências da danificação da placa do equipamento:</b><br/>
-            A presença do dano na placa eletrônica pode levar a problemas como mau contato, falhas intermitentes e até mesmo danos irreversíveis em componentes vitais. Isso pode resultar em mau funcionamento do equipamento, perda de desempenho e, em casos mais graves, a necessidade de substituição de peças ou do próprio equipamento.
-        """,
-        'USB Danificado': """
-            Prezado Cliente,<br/>
-            Gostaríamos de informar sobre a manutenção realizada em seu equipamento eletrônico, no qual constatamos a falha na conexão do usb.<br/><br/>
-            <b>Motivo da Manutenção:</b><br/>
-            Durante nossa inspeção, identificamos que a porta USB do equipamento está danificada. Isso pode ser observado pela foto anexada gerando falha na leitura do equipamento. É importante compreendermos as razões pelas quais essa falha ocorreu, a fim de evitar problemas futuros semelhantes.<br/><br/>
-            <b>Causa:</b><br/>
-            Com base em nossa análise, as razões pelas quais a porta USB foi danificada incluem Inserção Incorreta, Força Excessiva, Conexão e Desconexão Frequentes, Curto-Circuito, Sujeira e Poeira e Falhas de Energia.<br/><br/>
-            <b>Consequências:</b><br/>
-            O dano no conector USB resulta em Incapacidade de Conexão, Transferência de Dados Interrompida e Carregamento Ineficaz.
-        """,
-        'Botão de Acionamento Danificado': """
-            Prezado Cliente,<br/>
-            Gostaríamos de informar sobre a manutenção realizada em seu equipamento eletrônico, no qual constatamos que o botão de liga/desliga está aparentemente danificado.<br/><br/>
-            <b>Motivo da Manutenção:</b><br/>
-            Durante nossa análise, identificamos que o botão de acionamento do equipamento está danificado devido a sinais de mau uso. Este botão desempenha um papel essencial no uso cotidiano do equipamento, sendo responsável pela operação de ligar e desligar.<br/><br/>
-            <b>Causa:</b><br/>
-            As causas para o dano no botão de acionamento podem incluir: Pressão Excessiva, Uso Incorreto, Desgaste por mal uso.<br/><br/>
-            <b>Consequências sobre o dano no botão do equipamento:</b><br/>
-            Os danos no botão de acionamento resultam em várias dificuldades para o uso adequado do equipamento, tais como: Dificuldade de Ligação, Problemas de Desligamento, Operação Intermitente.
-        """,
-        'Antena LoRA Danificada': """
-            Prezado Cliente,<br/>
-            Gostaríamos de informar sobre a manutenção realizada em seu equipamento eletrônico, no qual constatamos dano físico na Antena LORA.<br/><br/>
-            <b>Motivo da Manutenção:</b><br/>
-            Durante nossa análise, identificamos que a Antena LoRa do equipamento está danificada. Esta antena desempenha um papel crucial na comunicação do equipamento, sendo responsável pela transmissão e recepção de dados através da tecnologia LoRa (Long Range).<br/><br/>
-            <b>Causa: Mal uso ou impacto.</b><br/>
-            As causas para o dano da antena LORA do equipamento podem incluir: Impactos Físicos, Instalação Incorreta e Excesso de peso sobre a antena.<br/><br/>
-            <b>Consequências sobre o dano na Antena LORA:</b><br/>
-            Os danos na Antena LORA resultam em uma variedade de problemas, tais como: Perda de Conexão, Alcance Reduzido e Falhas na Transmissão de Dados.
-        """,
-        'Sem problemas identificados': """
-            Prezado Cliente,<br/>
-            Gostaríamos de informar sobre a manutenção realizada em seu equipamento eletrônico, no qual não constatamos a presença de problemas.<br/><br/>
-            <b>Motivo da Manutenção:</b><br/>
-            Durante nossa análise minuciosa, realizamos atualizações essenciais de firmware, visando garantir o desempenho otimizado e a estabilidade operacional do equipamento.<br/>
-            É com grande satisfação que comunicamos que o equipamento agora está plenamente funcional, atendendo aos padrões de qualidade e desempenho esperados.<br/>
-        """
+        'Oxidação': "oxidação.txt",
+        'Placa Danificada': "placa_danificada.txt",
+        'USB Danificado': "usb_danificado.txt",
+        'Botão de Acionamento Danificado': "botao_acionamento.txt",
+        'Antena LoRA Danificada': "antena_lora.txt",
+        'Sem problemas identificados': "sem_problema_identificado.txt",
     }
     
     if tipo_problema in tipo_problema_texts:
-        elements.append(Paragraph(tipo_problema_texts[tipo_problema], styles['SmallText']))
+        file_path = os.path.join(app.root_path, "static/textos", tipo_problema_texts[tipo_problema])
+        with open(file_path, 'r', encoding='utf-8') as file:
+            text_content = file.read()
+            elements.append(Paragraph(text_content, styles['SmallText']))
         
     if data['photos']:
         images = []
@@ -285,6 +237,7 @@ def save_to_excel(data):
         "Protocolo": [generate_maintenance_number()],
         "Nome do Cliente": [data["nomeCliente"]],
         "Motivo": [data["motivo"]],
+        "Faturamento": [data["faturamento"]],
         "Modelo": [data["modelo"]],
         "Customização": [data["customizacao"]],
         "ID": [data["ids"]],
@@ -315,26 +268,10 @@ def update_manutencao(protocolo, status):
     df.to_excel(excel_file, index=False)
 
 def adicionar_data_aprovacao_excel(protocolo, cliente):
-    print("Adicionando data de aprovação no Excel...")
     arquivo_excel = 'db/registros_manutencao.xlsx'
 
     # Ler o arquivo Excel
     df = pd.read_excel(arquivo_excel)
-
-    # Imprimir o DataFrame para debug
-    print("DataFrame lido do Excel:")
-    print(df)
-
-    # Verificar os protocolos e clientes disponíveis no DataFrame
-    print("Protocolos disponíveis:")
-    print(df['Protocolo'].unique())
-
-    print("Clientes disponíveis:")
-    print(df['Nome do Cliente'].unique())
-
-    # Imprimir protocolo e cliente para debug
-    print("Protocolo:", protocolo)
-    print("Cliente:", cliente)
 
     # Flag para indicar se o protocolo e cliente foram encontrados
     encontrado = False
@@ -347,9 +284,6 @@ def adicionar_data_aprovacao_excel(protocolo, cliente):
 
             # Formatar a data como desejado
             data_formatada = data_aprovacao.strftime('%d-%m-%Y %H:%M')
-
-            print("Protocolo encontrado:", protocolo)
-            print("Cliente encontrado:", cliente)
             
             # Atualizar a coluna 'Data de Aprovação' na linha encontrada
             df.loc[index, 'Data de Aprovação'] = data_formatada
@@ -358,17 +292,64 @@ def adicionar_data_aprovacao_excel(protocolo, cliente):
             break
 
     if not encontrado:
-        print("Protocolo ou cliente não encontrado na planilha.")
         return
-
-    # Imprimir o DataFrame após a atualização para debug
-    print("DataFrame após atualização:")
-    print(df)
 
     # Salvar de volta para o arquivo Excel
     df.to_excel(arquivo_excel, index=False)
-    print("Data de aprovação adicionada com sucesso!")
+    
+def mover_para_diretoria(protocolo):
+    # Ler a manutenção com o protocolo fornecido
+    df_manutencao = pd.read_excel('db/registros_manutencao.xlsx')
+    manutencao = df_manutencao[df_manutencao['Protocolo'] == int(protocolo)].to_dict('records')[0]
 
-    # Verificar se o valor foi realmente salvo na célula correta
-    print("Verificando valor na célula após salvar:")
-    print(pd.read_excel(arquivo_excel)['Data de Aprovação'].loc[index])
+    # Adicionar a manutenção à planilha "diretoria.xlsx"
+    df_diretoria = pd.read_excel('db/diretoria.xlsx')
+    df_diretoria = df_diretoria.append(manutencao, ignore_index=True)
+
+    # Salvar a planilha atualizada
+    df_diretoria.to_excel('db/diretoria.xlsx', index=False)
+
+def adicionar_manutencao_diretoria(protocolo, cliente, faturamento):
+    arquivo_excel_diretoria = 'db/diretoria.xlsx'
+
+    # Criar um DataFrame com os dados da nova manutenção
+    nova_manutencao = {
+        'Protocolo': [protocolo],
+        'Nome do Cliente': [cliente],
+        'Faturamento': [faturamento],
+        'Status': ['Pendente'],  # Status inicial ao enviar para a diretoria
+        'Data de Recebimento': [datetime.now().strftime('%d-%m-%Y %H:%M')]  # Data atual como data de recebimento
+    }
+
+    # Verificar se o arquivo da Diretoria existe
+    if not os.path.isfile(arquivo_excel_diretoria):
+        # Se não existe, criar um novo arquivo com os dados da nova manutenção
+        df_nova_manutencao = pd.DataFrame(nova_manutencao)
+        df_nova_manutencao.to_excel(arquivo_excel_diretoria, index=False)
+    else:
+        # Se o arquivo já existe, ler o arquivo e adicionar a nova linha
+        df_diretoria = pd.read_excel(arquivo_excel_diretoria)
+        df_nova_manutencao = pd.DataFrame(nova_manutencao)
+        df_diretoria = pd.concat([df_diretoria, df_nova_manutencao], ignore_index=True)
+        df_diretoria.to_excel(arquivo_excel_diretoria, index=False)
+        
+def get_faturamento_from_protocolo(protocolo):
+    # Caminho para o arquivo Excel
+    arquivo_excel = 'db/registros_manutencao.xlsx'
+
+    # Ler o arquivo Excel para obter as informações da manutenção
+    df_manutencao = pd.read_excel(arquivo_excel)
+
+    # Filtrar o faturamento com base no protocolo
+    faturamento = df_manutencao[df_manutencao['Protocolo'] == int(protocolo)]['Faturamento'].values
+
+    # Verificar se foi encontrado algum faturamento
+    if len(faturamento) > 0:
+        faturamento_obtido = faturamento[0]
+        return faturamento_obtido
+    else:
+        return "Faturamento Desconhecido"
+        
+# Função separada para enviar e-mail de aprovação
+def enviar_email_aprovacao(email, pdf_path):
+    send_email_with_attachment(email, pdf_path)

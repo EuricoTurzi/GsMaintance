@@ -5,7 +5,7 @@
     <title>Registro de Manutenção</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="icon" href="img/logo-int.ico" type="image/x-icon">
+    <link rel="icon" href="static/img/logo-int.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -26,7 +26,13 @@
                     <option value="" disabled selected hidden>Selecione o motivo</option>
                     <option value="manutencao">Manutenção</option>
                     <option value="devolucao_estoque">Devolução/Estoque</option>
-                </select>
+                </select><br><br>
+
+                <label for="faturamento">Faturamento:</label>
+                <select name="faturamento_option_text" id="faturamento">
+                    <option value=""disabled selected hidden>Selecione o faturamento</option>
+                    <option value="com_custo">Com custo</option>
+                    <option value="sem_custo">Sem custo</option>
                 </select><br><br>
                 
                 <label for="modelo">Modelo:</label>
