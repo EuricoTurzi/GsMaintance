@@ -2,6 +2,7 @@ import os
 from app import app
 import os
 from flask_mail import Mail, Message
+from flask_login import current_user
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -37,8 +38,26 @@ def check_login(username, password):
     if username in df['Username'].values:
         index = df[df['Username'] == username].index[0]
         if password == df.loc[index, 'Password']:
-            return True
-    return False
+            return True, df.loc[index, 'AccessLevel']  # Retorna True e o nível de acesso
+    return False, None  # Retorna False se não encontrou o usuário ou a senha, e None para o nível de acesso
+
+# Função para receber o nível de acesso
+def get_access_level(username):
+    logins_df = pd.read_excel('db/logins.xlsx')
+    user_row = logins_df[logins_df['Username'] == username]
+    if not user_row.empty:
+        return user_row.iloc[0]['AccessLevel']
+    else:
+        return "User"  # Ou outro valor padrão desejado
+
+# Função para receber o acesso por ID
+def get_access_level_by_id(user_id):
+    logins_df = pd.read_excel('db/logins.xlsx')
+    user_row = logins_df[logins_df['Username'] == user_id]
+    if not user_row.empty:
+        return user_row.iloc[0]['AccessLevel']
+    else:
+        return None   
 
 # Funções para o Flask-Mail
 def send_email_with_attachment(email, pdf_path):
@@ -70,13 +89,13 @@ def send_email_with_attachment(email, pdf_path):
         print("E-mail enviado com sucesso para:", email)
     except Exception as e:
         print("Erro ao enviar e-mail:", str(e))
+        
 # Funções auxiliares
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def generate_maintenance_pdf(data):
     agora = datetime.now()
-    datinha = agora.strftime("%d-%m-%Y")
     
     pdf_filename = f"{data['protocolo']} - {data['nomeCliente']}.pdf"
     pdf_path = os.path.join(app.root_path, "static/protocolos", pdf_filename)
@@ -202,12 +221,14 @@ def generate_maintenance_pdf(data):
     doc.build(elements)
     return pdf_filename
 
+# Função para gerar o número de protocolo
 def generate_maintenance_number():
     # Gerar número de protocolo baseado na data/hora atual
     now = datetime.now()
     protocolo = now.strftime("%d%m%y%H%M")
     return protocolo
 
+# Função para criar a grade de fotos
 def create_image_table(images, max_col=3):
     table_data = []
     row = []
@@ -229,6 +250,7 @@ def create_image_table(images, max_col=3):
 
     return img_table
 
+# Função para salvar a nova manutenção no Excel
 def save_to_excel(data):
     excel_file = 'db/registros_manutencao.xlsx'
 
@@ -349,7 +371,7 @@ def get_faturamento_from_protocolo(protocolo):
         return faturamento_obtido
     else:
         return "Faturamento Desconhecido"
-        
+             
 # Função separada para enviar e-mail de aprovação
 def enviar_email_aprovacao(email, pdf_path):
     send_email_with_attachment(email, pdf_path)

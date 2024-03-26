@@ -1,8 +1,8 @@
 from app import app
 from app.functions import *
 import os
-from flask import render_template, request, send_file, redirect, url_for, flash, jsonify
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
+from flask import render_template, request, send_file, redirect, url_for, flash, jsonify, abort
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime
 
 MOTIVOS = {
@@ -22,12 +22,18 @@ login_manager.init_app(app)
 # Função para carregar o usuário
 @login_manager.user_loader
 def load_user(user_id):
-    return User(user_id)
+    # Aqui você precisa obter o access_level associado ao user_id
+    access_level = get_access_level_by_id(user_id)
+    return User(user_id, access_level)
 
 # Classe User para o Flask-Login
 class User(UserMixin):
-    def __init__(self, id):
+    def __init__(self, id, access_level):
         self.id = id
+        self.access_level = access_level
+
+    def get_access_level(self):
+        return self.access_level
         
 # Rota de login
 @app.route('/', methods=['GET', 'POST'])
@@ -35,8 +41,9 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if check_login(username, password):
-            user = User(username)
+        success, access_level = check_login(username, password)
+        if success:
+            user = User(username, access_level)
             login_user(user)
             return redirect(url_for('home'))
         else:
@@ -57,12 +64,6 @@ def logout():
 def home():
     success_message = False
     if request.method == 'POST':
-        # Verifica se o formulário de nova manutenção foi submetido
-        if 'username' in request.form:
-            # Se o campo 'username' está presente no formulário
-            username = request.form['username']
-            password = request.form['password']
-            # Aqui você pode fazer o processamento do login
         
         protocolo = generate_maintenance_number()
         
@@ -101,9 +102,18 @@ def visualizar_manutencoes():
     manutencoes = get_manutencoes()
     return render_template('visualizar_manutencoes.html', manutencoes=manutencoes)
 
+# Rota para aprovar manutenção
 @app.route('/aprovar_manutencao/<protocolo>', methods=['POST'])
 @login_required
 def aprovar_manutencao(protocolo):
+    username = current_user.id
+    access_level = get_access_level(username)
+    
+    allowed_levels = ["admin", "diretor", "coord"]
+    
+    if access_level not in allowed_levels:
+        abort(403)  # Retorna um erro 403 de "Acesso Proibido"
+        
     # Obter o nome do cliente do formulário (ou ajustar conforme necessário)
     cliente = request.form.get('cliente', 'Cliente Desconhecido')
     faturamento = faturamento = get_faturamento_from_protocolo(protocolo)
@@ -194,6 +204,7 @@ def enviar_diretoria(protocolo):
 
     return redirect(url_for('visualizar_manutencoes'))
 
+# Rota para enviar à diretoria
 @app.route('/aprovar_enviar_diretoria/<protocolo>', methods=['POST'])
 @login_required
 def aprovar_enviar_diretoria(protocolo):
@@ -213,6 +224,14 @@ def aprovar_enviar_diretoria(protocolo):
 @app.route('/visualizar_diretoria', methods=['GET'])
 @login_required
 def visualizar_diretoria():
+    username = current_user.id
+    access_level = get_access_level(username)
+    
+    allowed_levels = ["admin", "diretor"]
+    
+    if access_level not in allowed_levels:
+        return redirect(url_for('home'))
+    
     df_diretoria = pd.read_excel('db/diretoria.xlsx')
     manutencoes_diretoria = df_diretoria.to_dict('records')
     return render_template('visualizar_diretoria.html', manutencoes_diretoria=manutencoes_diretoria)
@@ -222,8 +241,10 @@ def visualizar_diretoria():
 @login_required
 def aprovar_diretoria(protocolo):
     acao = request.form.get('acao')
-    
-    if acao == 'aprovar':       
+
+    if acao == 'aprovar':
+        # Chama a função para registrar a aprovação antes de atualizar o status
+
         # Ler o arquivo da Diretoria
         arquivo_excel_diretoria = 'db/diretoria.xlsx'
         df_diretoria = pd.read_excel(arquivo_excel_diretoria)
@@ -237,8 +258,6 @@ def aprovar_diretoria(protocolo):
 
             # Salvar de volta para o arquivo Excel
             df_diretoria.to_excel(arquivo_excel_diretoria, index=False)
-        else:
-            flash('Manutenção não encontrada.', 'error')
 
         return redirect(url_for('visualizar_diretoria'))
     
@@ -256,8 +275,6 @@ def aprovar_diretoria(protocolo):
 
             # Salvar de volta para o arquivo Excel
             df_diretoria.to_excel(arquivo_excel_diretoria, index=False)
-        else:
-            flash('Manutenção não encontrada.', 'error')
 
         return redirect(url_for('visualizar_diretoria'))
 

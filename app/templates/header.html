@@ -3,7 +3,9 @@
     <ul class="nav-links">
         <li><a href="{{ url_for('home') }}">Formulário</a></li>
         <li><a href="{{ url_for('visualizar_manutencoes') }}">Manutenções</a></li>
+        {% if current_user.access_level in ["admin", "diretor"] %}
         <li><a href="{{ url_for('visualizar_diretoria') }}">Diretoria</a></li>
+        {%endif%}
         <li><a href="{{ url_for('logout') }}">Logout</a></li>
     </ul>
 </nav>
