@@ -1,12 +1,13 @@
 import os
 from app import app
-import os
+from io import BytesIO
 from flask_mail import Mail, Message
 from flask_login import current_user
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Image, Table, TableStyle
+from reportlab.pdfgen import canvas
 from datetime import datetime
 import pandas as pd
 
@@ -26,6 +27,7 @@ mail = Mail(app)
 
 # Caminho para o arquivo Excel de banco de dados
 excel_file = 'db/registros_manutencao.xlsx'
+requisicao_file = 'db/registros_requisicoes.xlsx'
 
 MOTIVOS = {
     "manutencao": "Manutenção",
@@ -34,30 +36,30 @@ MOTIVOS = {
 
 # Função para verificar o login
 def check_login(username, password):
-    df = pd.read_excel('db/logins.xlsx')
-    if username in df['Username'].values:
-        index = df[df['Username'] == username].index[0]
-        if password == df.loc[index, 'Password']:
-            return True, df.loc[index, 'AccessLevel']  # Retorna True e o nível de acesso
+    logins_df = pd.read_excel('db/logins.xlsx')
+    if username in logins_df['Username'].values:
+        user_row = logins_df[logins_df['Username'] == username]
+        if password == user_row.iloc[0]['Password']:
+            access_level = user_row.iloc[0]['AccessLevel']
+            return True, access_level  # Retorna True e o nível de acesso
     return False, None  # Retorna False se não encontrou o usuário ou a senha, e None para o nível de acesso
 
-# Função para receber o nível de acesso
-def get_access_level(username):
-    logins_df = pd.read_excel('db/logins.xlsx')
-    user_row = logins_df[logins_df['Username'] == username]
-    if not user_row.empty:
-        return user_row.iloc[0]['AccessLevel']
-    else:
-        return "User"  # Ou outro valor padrão desejado
-
 # Função para receber o acesso por ID
+access_level_cache = {}
+
 def get_access_level_by_id(user_id):
+    if user_id in access_level_cache:
+        return access_level_cache[user_id]
+    
     logins_df = pd.read_excel('db/logins.xlsx')
     user_row = logins_df[logins_df['Username'] == user_id]
     if not user_row.empty:
-        return user_row.iloc[0]['AccessLevel']
+        access_level = user_row.iloc[0]['AccessLevel']
+        access_level_cache[user_id] = access_level
+        return access_level
     else:
-        return None   
+        return None
+
 
 # Funções para o Flask-Mail
 def send_email_with_attachment(email, pdf_path):
@@ -355,6 +357,36 @@ def adicionar_manutencao_diretoria(protocolo, cliente, faturamento):
         df_diretoria = pd.concat([df_diretoria, df_nova_manutencao], ignore_index=True)
         df_diretoria.to_excel(arquivo_excel_diretoria, index=False)
         
+def adicionar_data_aprovacao_diretoria(protocolo):
+    arquivo_excel = 'db/diretoria.xlsx'
+
+    # Ler o arquivo Excel
+    df = pd.read_excel(arquivo_excel)
+
+    # Flag para indicar se o protocolo foi encontrado
+    encontrado = False
+
+    # Iterar pelo DataFrame para encontrar o protocolo
+    for index, row in df.iterrows():
+        if str(row['Protocolo']) == str(protocolo):
+            # Obter a data e hora atual
+            data_aprovacao = datetime.now()
+
+            # Formatar a data como desejado
+            data_formatada = data_aprovacao.strftime('%d-%m-%Y %H:%M')
+            
+            # Atualizar a coluna 'Data de Aprovação' na linha encontrada
+            df.loc[index, 'Data de Aprovação'] = data_formatada
+            
+            encontrado = True
+            break
+
+    if not encontrado:
+        return
+
+    # Salvar de volta para o arquivo Excel
+    df.to_excel(arquivo_excel, index=False)
+        
 def get_faturamento_from_protocolo(protocolo):
     # Caminho para o arquivo Excel
     arquivo_excel = 'db/registros_manutencao.xlsx'
@@ -375,3 +407,85 @@ def get_faturamento_from_protocolo(protocolo):
 # Função separada para enviar e-mail de aprovação
 def enviar_email_aprovacao(email, pdf_path):
     send_email_with_attachment(email, pdf_path)
+    
+def get_next_protocol_number():
+    protocolo_file = 'db/protocolo_counter.txt'
+    next_number = 1
+
+    if os.path.exists(protocolo_file):
+        with open(protocolo_file, 'r') as f:
+            next_number = int(f.read())
+            next_number += 1
+
+    with open(protocolo_file, 'w') as f:
+        f.write(str(next_number))
+
+    return next_number
+    
+# Função para gerar o número da requisição
+def generate_requisicao_number():
+    protocolo_number = get_next_protocol_number()
+    protocolo_str = str(protocolo_number).zfill(5)  # Preenche com zeros à esquerda
+    return f"REQ{protocolo_str}"
+
+# Função para salvar os dados da requisição no arquivo Excel
+def save_requisicao_to_excel(data):
+    requisicao_file = 'db/registros_requisicoes.xlsx'
+
+    # Cria um DataFrame com os dados da nova manutenção
+    df = pd.DataFrame({
+        "Protocolo": [generate_requisicao_number()],
+        "Data": [data["dateTime"]],
+        "Nome do Cliente": [data["nomeCliente"]],
+        "Motivo": [data["motivo"]],
+        "Faturamento": [data["faturamento"]],
+        "Modelo": [data["modelo"]],
+        "Customização": [data["customizacao"]],
+        "Tipo de Problema": [data["tipoProblema"]],
+        "Tratativa": [data["tratativa"]],
+        "Status": "Em Aberto"
+    })
+
+    # Se o arquivo já existe, lê o conteúdo e adiciona o novo registro
+    if os.path.isfile(requisicao_file):
+        existing_df = pd.read_excel(requisicao_file)
+        df = pd.concat([existing_df, df], ignore_index=True)
+
+    # Salva o DataFrame no arquivo Excel
+    df.to_excel(requisicao_file, index=False)
+
+# Função para obter todas as requisições do arquivo Excel
+def get_requisicoes():
+    if os.path.exists(requisicao_file):
+        df = pd.read_excel(requisicao_file)
+        requisicoes = df.to_dict('records')
+        return requisicoes
+    return []
+    
+# Função para gerar o PDF da requisição
+def generate_requisicao_pdf(data):
+    # Caminho e nome do arquivo PDF
+    pdf_filename = f"{data['protocolo']} - {data['nomeCliente']}.pdf"
+    pdf_path = os.path.join(app.root_path, "static/requisicoes", pdf_filename)
+
+    # Criação do PDF com reportlab
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    c.drawString(100, 750, "Protocolo de Requisição")
+    c.drawString(100, 730, f"Protocolo: {data['protocolo']}")
+    c.drawString(100, 710, f"Cliente: {data['nomeCliente']}")
+    c.drawString(100, 690, f"Data: {data['dateTime']}")
+    # Adicionar mais informações conforme necessário
+    c.save()
+
+    # Salvar o PDF no caminho especificado
+    with open(pdf_path, 'wb') as f:
+        f.write(buffer.getvalue())
+
+    return True
+
+# Função para atualizar o status da requisição no arquivo Excel
+def update_requisicao(protocolo, status):
+    df = pd.read_excel(requisicao_file)
+    df.loc[df['Protocolo'] == protocolo, 'Status'] = status
+    df.to_excel(requisicao_file, index=False)

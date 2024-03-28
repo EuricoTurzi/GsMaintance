@@ -1,11 +1,16 @@
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/css/header.css') }}">
 <nav class="navbar">
     <a href="{{ url_for('home') }}" class="logo">Grupo GoldenSat</a>
     <ul class="nav-links">
-        <li><a href="{{ url_for('home') }}">Formulário</a></li>
+        <li><a href="{{ url_for('home') }}">Formulário Manutenção</a></li>
+        <li><a href="{{ url_for('requisicoes') }}">Formulário Requisições</a></li>
+        <li><a href="{{ url_for('visualizar_requisicoes') }}">Requisições</a></li>
+        {% if user_access_level >= 1 %}
         <li><a href="{{ url_for('visualizar_manutencoes') }}">Manutenções</a></li>
-        {% if current_user.access_level in ["admin", "diretor"] %}
+        {% endif %}
+        {% if user_access_level >= 2 %}
         <li><a href="{{ url_for('visualizar_diretoria') }}">Diretoria</a></li>
-        {%endif%}
+        {% endif %}
         <li><a href="{{ url_for('logout') }}">Logout</a></li>
     </ul>
 </nav>

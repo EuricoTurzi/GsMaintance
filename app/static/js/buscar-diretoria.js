@@ -8,17 +8,13 @@ function filtrarRequisicoes() {
     // Capturar o valor do filtro de status
     var filtroStatus = document.getElementById('status-filter').value.toUpperCase();
 
-    // Capturar o valor do filtro de faturamento
-    var filtroFaturamento = document.getElementById('faturamento-filter').value.toUpperCase();
-
     for (i = 0; i < cards.length; i++) {
         card = cards[i];
         cardHeader = card.getElementsByTagName("h3")[0];
         txtValue = cardHeader.textContent || cardHeader.innerText;
 
         if (txtValue.toUpperCase().indexOf(filter) > -1 &&
-            (filtroStatus === '' || card.innerText.toUpperCase().indexOf(filtroStatus) > -1) &&
-            (filtroFaturamento === '' || card.innerText.toUpperCase().indexOf(filtroFaturamento) > -1)) {
+            (filtroStatus === '' || card.innerText.toUpperCase().indexOf(filtroStatus) > -1)) {
             card.style.display = "";
         } else {
             card.style.display = "none";
@@ -28,4 +24,3 @@ function filtrarRequisicoes() {
 
 // Event listener para chamar a função de filtrar quando os dropdowns forem alterados
 document.getElementById('status-filter').addEventListener('change', filtrarRequisicoes);
-document.getElementById('faturamento-filter').addEventListener('change', filtrarRequisicoes);

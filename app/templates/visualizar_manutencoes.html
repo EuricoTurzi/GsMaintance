@@ -3,26 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <title>Manutenções</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.4.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/css/style_visualizar.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='/css/header.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="icon" href="static/img/logo-int.ico" type="image/x-icon">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.4.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ url_for('static', filename='/js/buscar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/buscar.js') }}"></script>
+    <audio id="alertaSonoro" src="{{ url_for('static', filename='sons/alarme.mp3') }}"></audio>
 </head>
 <body>
     {% include 'header.html' %}
-    <!-- Barra de Busca -->
-    <div class="search-container">
-        <input type="text" id="search-input" onkeyup="filtrarRequisicoes()" placeholder="Busca por Cliente ou Protocolo">
+    <!-- Container para busca e filtros -->
+    <div class="search-filter-container">
+        <!-- Barra de Busca -->
+        <div class="search-container">
+            <input type="text" id="search-input" onkeyup="filtrarRequisicoes()" placeholder="Busca por Cliente ou Protocolo">
+        </div>
+
+        <!-- Container dos Filtros -->
+        <div class="filter-container">
+            <select id="status-filter" onchange="filtrarRequisicoes()">
+                <option value="">Filtrar por Status</option>
+                <option value="Em Aberto">Em Aberto</option>
+                <option value="Enviado à Diretoria">Enviado à Diretoria</option>
+                <option value="Aprovada">Aprovada</option>
+            </select>
+            <select id="faturamento-filter" onchange="filtrarRequisicoes()">
+                <option value="">Filtrar por Faturamento</option>
+                <option value="Com custo">Com custo</option>
+                <option value="Sem custo">Sem custo</option>
+            </select>
+        </div>
     </div>
 
-    <!-- Div de Carregamento -->
-    <div id="loading-overlay">
-        <div class="loading-message">
-            Enviando e-mail...
+    <!-- Botão de Notificações com Contador -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#notificacoesModal">
+        Notifications <span id="badgeNotificacoes" class="badge bg-secondary">0</span>
+    </button>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <!-- Toast Element -->
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Nova Atualização!</strong>
+            <small class="text-muted">Agora</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Novas linhas foram adicionadas ao Excel!
+        </div>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar o último protocolo -->
+    <div class="modal fade" id="notificacoesModal" tabindex="-1" aria-labelledby="notificacoesModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificacoesModalLabel">Último Protocolo Atualizado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="ultimoProtocolo">Nenhum protocolo atualizado ainda.</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -38,8 +84,9 @@
                 <p><b>Tipo de Problema:</b> {{ manutencao['Tipo de Problema'] }}</p>
                 <p><b>Faturamento:</b> {{ manutencao['Faturamento'] }}</p>
                 <p><b>Status:</b> {{ manutencao['Status'] }}</p>
-                <p><b>Aprovado:</b> {{ manutencao['Data de Aprovação'] }}</p>
+                <p><b>Aprovação:</b> {{ manutencao['Data de Aprovação'] }}</p>
                 <div class="botoes">
+                    {% if user_access_level >= 2 %}
                     <form id="aprovarForm{{ manutencao['Protocolo'] }}" action="{{ url_for('aprovar_manutencao', protocolo=manutencao['Protocolo']) }}" method="post">
                         <input type="hidden" name="cliente" value="{{ manutencao['Nome do Cliente'] }}">
                         <select name="acao">
@@ -47,6 +94,7 @@
                             <option value="enviar_diretoria">Enviar à Diretoria</option>
                         </select>
                         <button type="submit">Enviar</button>
+                        {%endif%}
                     </form>
                 <form id="downloadForm{{ manutencao['Protocolo'] }}" class="download-form">
                     <input type="hidden" name="protocolo" value="{{ manutencao['Protocolo'] }}">
@@ -87,55 +135,21 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        showAlert('E-mail enviado com sucesso.', 'success');
+                        showAlert('Enviado com sucesso.', 'success');
                     } else {
-                        showAlert('Erro ao enviar o e-mail.', 'error');
+                        showAlert('Erro ao enviar.', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Erro ao enviar o formulário:', error);
-                    showAlert('Erro ao enviar o e-mail.', 'error');
+                    showAlert('Erro ao enviar o formulário.', 'error');
                 });
             }
         });
     </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const downloadButtons = document.querySelectorAll('.download-button');
-            downloadButtons.forEach(function(button) {
-                button.addEventListener('click', function() {
-                    const form = this.closest('.download-form');
-                    const protocolo = form.querySelector('input[name="protocolo"]').value;
-                    const cliente = form.querySelector('input[name="cliente"]').value;
-                    const url = "{{ url_for('download_protocolo') }}";
 
-                    fetch(url, {
-                        method: 'POST',
-                        body: JSON.stringify({ protocolo, cliente }),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            return response.blob();
-                        }
-                        throw new Error('Erro ao gerar o protocolo.');
-                    })
-                    .then(blob => {
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `${protocolo} - ${cliente}.pdf`;
-                        a.click();
-                        window.URL.revokeObjectURL(url);
-                    })
-                    .catch(error => {
-                        console.error('Erro:', error);
-                    });
-                });
-            });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/notificacao_excel.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/download.js') }}"></script>
+
 </body>
 </html>

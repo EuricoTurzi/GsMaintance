@@ -12,8 +12,7 @@ body {
     font-family: "Outfit", sans-serif;
     background-image: url("../img/wallpaper.jpg");
     background-repeat: no-repeat;
-    background-size: cover; /* Ajusta o tamanho da imagem para cobrir todo o fundo */
-    background-attachment: fixed; /* Mantém o fundo fixo enquanto a página rola */
+    background-size: cover;
     color: #000;
     margin: 0;
     padding: 0;
@@ -46,6 +45,7 @@ body {
     overflow: hidden;
 }
 
+
 .card:hover {
     transform: translateY(-10px) scale(1.05);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
@@ -70,6 +70,7 @@ body {
     transition: width 0.5s;
 }
 
+
 .card p {
     font-size: 16px;
     color: #666;
@@ -79,7 +80,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 20px;
+    /* margin-top: 20px; */
 }
 
 .card form select {
@@ -104,14 +105,11 @@ body {
     position: relative;
 }
 
+
 .card form button:hover {
     background-color: #a07302;
 }
 
-
-.card select {
-    margin-bottom: 20px;
-}
 
 .btn-download {
     width: 30px;
@@ -172,6 +170,10 @@ body {
 .filter-container select:focus {
     outline: none;
     border-color: dodgerblue;
+}
+
+.botoes .formulario{
+    margin-bottom: 20px;
 }
 
 @media (max-width: 768px) {

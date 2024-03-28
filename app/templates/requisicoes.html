@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Requisição</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/requisicoes.css') }}">
+    <link rel="icon" href="static/img/logo-int.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    {% include 'header.html' %}
+    <div class="center-container">
+        <div class="container">
+            <h1>FORMULÁRIO DE REQUISIÇÃO</h1>
+
+            <form action="{{ url_for('requisicoes') }}" method="POST" enctype="multipart/form-data">
+                <label for="nomeCliente">Nome do Cliente:</label>
+                <input type="text" id="nomeCliente" name="nomeCliente" required><br><br>
+
+                <label for="motivo">Motivo:</label>
+                <select id="motivo" name="motivo" required>
+                    <option value="manutencao">Manutenção</option>
+                    <option value="devolucao_estoque">Devolução/Estoque</option>
+                </select><br><br>
+
+                <label for="faturamento">Faturamento:</label>
+                <select id="faturamento" name="faturamento" required>
+                    <option value="com_custo">Com Custo</option>
+                    <option value="sem_custo">Sem Custo</option>
+                </select><br><br>
+
+                <label for="modelo">Modelo:</label>
+                <input type="text" id="modelo" name="modelo" required><br><br>
+
+                <label for="customizacao">Customização:</label>
+                <input type="text" id="customizacao" name="customizacao"required></input><br><br>
+
+                <label for="tipoProblema">Tipo de Problema:</label>
+                <input type="text" id="tipoProblema" name="tipoProblema" required><br><br>
+
+                <label for="photos">Fotos (se necessário):</label>
+                <input type="file" id="photos" name="photos" accept="image/*" multiple><br><br>
+
+                <label for="tratativa">Tratativa:</label>
+                <input type="text" id="tratativa" name="tratativa" required></input ><br><br>
+
+                <button type="submit">Enviar Requisição</button>
+            </form>
+        </div>
+    </div>
+    
+</body>
+</html>
