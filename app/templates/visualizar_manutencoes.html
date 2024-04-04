@@ -16,13 +16,14 @@
     {% include 'header.html' %}
     <!-- Container para busca e filtros -->
     <div class="search-filter-container">
-        <!-- Barra de Busca -->
-        <div class="search-container">
-            <input type="text" id="search-input" onkeyup="filtrarRequisicoes()" placeholder="Busca por Cliente ou Protocolo">
-        </div>
-
         <!-- Container dos Filtros -->
         <div class="filter-container">
+            <!-- Barra de Busca -->
+            <div class="search-container">
+                <input type="text" id="search-input" onkeyup="filtrarRequisicoes()" placeholder="Buscar Cliente ou Protocolo">
+            </div>
+            
+            <!-- Filtros -->
             <select id="status-filter" onchange="filtrarRequisicoes()">
                 <option value="">Filtrar por Status</option>
                 <option value="Em Aberto">Em Aberto</option>
@@ -35,12 +36,13 @@
                 <option value="Sem custo">Sem custo</option>
             </select>
         </div>
+    
+        <!-- Botão de Notificações com Contador -->
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#notificacoesModal">
+            Notificações <span id="badgeNotificacoes" class="badge bg-secondary">0</span>
+        </button>
     </div>
-
-    <!-- Botão de Notificações com Contador -->
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#notificacoesModal">
-        Notifications <span id="badgeNotificacoes" class="badge bg-secondary">0</span>
-    </button>
+    
 
     <!-- Toast Container -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
@@ -52,7 +54,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-            Novas linhas foram adicionadas ao Excel!
+            Nova manutenção encontrada!
         </div>
         </div>
     </div>
@@ -62,11 +64,11 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="notificacoesModalLabel">Último Protocolo Atualizado</h5>
+                    <h5 class="modal-title" id="notificacoesModalLabel">Notificações</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="ultimoProtocolo">Nenhum protocolo atualizado ainda.</p>
+                    <p id="ultimoProtocolo">Sem atualizações recentes.</p>
                 </div>
             </div>
         </div>
@@ -85,7 +87,8 @@
                 <p><b>Faturamento:</b> {{ manutencao['Faturamento'] }}</p>
                 <p><b>Status:</b> {{ manutencao['Status'] }}</p>
                 <p><b>Aprovação:</b> {{ manutencao['Data de Aprovação'] }}</p>
-                <div class="botoes">
+
+                <div class="bottom-buttons">
                     {% if user_access_level >= 2 %}
                     <form id="aprovarForm{{ manutencao['Protocolo'] }}" action="{{ url_for('aprovar_manutencao', protocolo=manutencao['Protocolo']) }}" method="post">
                         <input type="hidden" name="cliente" value="{{ manutencao['Nome do Cliente'] }}">

@@ -5,6 +5,7 @@ from flask_mail import Mail, Message
 from flask_login import current_user
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
+from flask import jsonify
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Image, Table, TableStyle
 from reportlab.pdfgen import canvas
@@ -62,35 +63,37 @@ def get_access_level_by_id(user_id):
 
 
 # Funções para o Flask-Mail
-def send_email_with_attachment(email, pdf_path):
-    msg = Message('Protocolo de Manuteção',
-                  sender='seu_email@gmail.com',
-                  recipients=[email])
-    msg.body = '''
-    Prezados,
-    Gostaria de informar que a manutenção referente ao equipamento foi concluída conforme agendado.
-                
-    Anexei ao presente e-mail o protocolo de manutenção detalhando todas as atividades realizadas, as condições atuais do equipamento e quaisquer recomendações relevantes para garantir seu pleno funcionamento.
-                
-    Caso venham a surgir dúvidas, estou à disposição para esclarecê-las.
-                
-    Atenciosamente,
-                
-    Guilherme Amarante
-    Laboratório Técnico
-    '''
-    
-    # Obter apenas o nome do arquivo a partir do caminho completo
-    pdf_filename = os.path.basename(pdf_path)
-    
-    with app.open_resource(pdf_path) as pdf:
-        msg.attach(pdf_filename, 'application/pdf', pdf.read())
+def send_email_with_attachment(emails, pdf_path):
+        msg = Message('Protocolo de Manuteção',
+                    sender='seu_email@gmail.com',
+                    recipients=[emails[0]])
+        msg.cc = emails[1:]
+        
+        msg.body = '''
+        Prezados,
+        Gostaria de informar que a manutenção referente ao equipamento foi concluída conforme agendado.
+                    
+        Anexei ao presente e-mail o protocolo de manutenção detalhando todas as atividades realizadas, as condições atuais do equipamento e quaisquer recomendações relevantes para garantir seu pleno funcionamento.
+                    
+        Caso venham a surgir dúvidas, estou à disposição para esclarecê-las.
+                    
+        Atenciosamente,
+                    
+        Guilherme Amarante
+        Laboratório Técnico
+        '''
+        
+        # Obter apenas o nome do arquivo a partir do caminho completo
+        pdf_filename = os.path.basename(pdf_path)
+        
+        with app.open_resource(pdf_path) as pdf:
+            msg.attach(pdf_filename, 'application/pdf', pdf.read())
 
-    try:
-        mail.send(msg)
-        print("E-mail enviado com sucesso para:", email)
-    except Exception as e:
-        print("Erro ao enviar e-mail:", str(e))
+        try:
+            mail.send(msg)
+            print("E-mail enviado com sucesso para:", emails)
+        except Exception as e:
+            print("Erro ao enviar e-mail para", str(e))
         
 # Funções auxiliares
 def allowed_file(filename):
@@ -145,8 +148,11 @@ def generate_maintenance_pdf(data):
     tipo_problema_texts = {
         'Oxidação': "oxidação.txt",
         'Placa Danificada': "placa_danificada.txt",
+        'Placa Danificada s/ Custo': "placa_danificada_sem_custo.txt",
         'USB Danificado': "usb_danificado.txt",
+        'USB Danificado s/ Custo': "usb_danificado_sem_custo.txt",
         'Botão de Acionamento Danificado': "botao_acionamento.txt",
+        'Botão de Acionamento Danificado s/ Custo': "botao_acionamento_sem_custo.txt",
         'Antena LoRA Danificada': "antena_lora.txt",
         'Sem problemas identificados': "sem_problema_identificado.txt",
     }
@@ -162,7 +168,7 @@ def generate_maintenance_pdf(data):
         for photo in data['photos']:
             photo_path = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], photo.filename)
             photo.save(photo_path)
-            img = Image(photo_path, width=2*inch, height=1.5*inch)
+            img = Image(photo_path, width=2.5*inch, height=1.25*inch)
             images.append(img)
         
         elements.append(Spacer(1, 12))
@@ -227,7 +233,7 @@ def generate_maintenance_pdf(data):
 def generate_maintenance_number():
     # Gerar número de protocolo baseado na data/hora atual
     now = datetime.now()
-    protocolo = now.strftime("%d%m%y%H%M")
+    protocolo = now.strftime("%Y%m%d%H%M")
     return protocolo
 
 # Função para criar a grade de fotos
@@ -246,8 +252,8 @@ def create_image_table(images, max_col=3):
     img_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 0),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
     ]))
 
     return img_table
@@ -424,25 +430,40 @@ def get_next_protocol_number():
     
 # Função para gerar o número da requisição
 def generate_requisicao_number():
-    protocolo_number = get_next_protocol_number()
-    protocolo_str = str(protocolo_number).zfill(5)  # Preenche com zeros à esquerda
-    return f"REQ{protocolo_str}"
+    now = datetime.now()
+    protocolo = now.strftime("%Y%m%d%H%M")
+    return protocolo
 
 # Função para salvar os dados da requisição no arquivo Excel
 def save_requisicao_to_excel(data):
     requisicao_file = 'db/registros_requisicoes.xlsx'
 
-    # Cria um DataFrame com os dados da nova manutenção
+    # Cria um DataFrame com os dados da nova requisição
     df = pd.DataFrame({
         "Protocolo": [generate_requisicao_number()],
         "Data": [data["dateTime"]],
-        "Nome do Cliente": [data["nomeCliente"]],
+        "CNPJ": [data["cnpj"]],
+        "Início de Contrato": [data["inicio_contrato"]],
+        "Vigência": [data["vigencia"]],
         "Motivo": [data["motivo"]],
-        "Faturamento": [data["faturamento"]],
+        "Cliente": [data["cliente"]],
+        "Comercial": [data["comercial"]],
+        "Contrato": [data["contrato"]],
+        "Envio": [data["envio"]],
+        "Endereço": [data["endereco"]],
+        "A/C": [data["ac"]],
+        "E-mail": [data["email"]],
+        "Quantidade": [data["quantidade"]],
         "Modelo": [data["modelo"]],
         "Customização": [data["customizacao"]],
-        "Tipo de Problema": [data["tipoProblema"]],
-        "Tratativa": [data["tratativa"]],
+        "TP": [data["tp"]],
+        "Carregador": [data["carregador"]],
+        "Cabo": [data["cabo"]],
+        "Fatura": [data["fatura"]],
+        "Valor": [data["valor"]],
+        "Forma de Pagamento": [data["forma_pagamento"]],
+        "Observações": [data["observacoes"]],
+        "Validação": [data["validacao"]],
         "Status": "Em Aberto"
     })
 
@@ -465,7 +486,7 @@ def get_requisicoes():
 # Função para gerar o PDF da requisição
 def generate_requisicao_pdf(data):
     # Caminho e nome do arquivo PDF
-    pdf_filename = f"{data['protocolo']} - {data['nomeCliente']}.pdf"
+    pdf_filename = f"{data['protocolo']} - {data['cliente']}.pdf"
     pdf_path = os.path.join(app.root_path, "static/requisicoes", pdf_filename)
 
     # Criação do PDF com reportlab
@@ -473,9 +494,29 @@ def generate_requisicao_pdf(data):
     c = canvas.Canvas(buffer, pagesize=letter)
     c.drawString(100, 750, "Protocolo de Requisição")
     c.drawString(100, 730, f"Protocolo: {data['protocolo']}")
-    c.drawString(100, 710, f"Cliente: {data['nomeCliente']}")
     c.drawString(100, 690, f"Data: {data['dateTime']}")
-    # Adicionar mais informações conforme necessário
+    c.drawString(100, 670, f"CNPJ: {data['cnpj']}")
+    c.drawString(100, 650, f"Início de Contrato: {data['inicio_contrato']}")
+    c.drawString(100, 630, f"Vigência: {data['vigencia']}")
+    c.drawString(100, 610, f"Motivo: {data['motivo']}")
+    c.drawString(100, 590, f"Cliente: {data['cliente']}")
+    c.drawString(100, 570, f"Comercial: {data['comercial']}")
+    c.drawString(100, 550, f"Contrato: {data['contrato']}")
+    c.drawString(100, 530, f"Envio: {data['envio']}")
+    c.drawString(100, 510, f"Endereço: {data['endereco']}")
+    c.drawString(100, 490, f"A/C: {data['ac']}")
+    c.drawString(100, 470, f"E-mail: {data['email']}")
+    c.drawString(100, 450, f"Quantidade: {data['quantidade']}")
+    c.drawString(100, 430, f"Modelo: {data['modelo']}")
+    c.drawString(100, 410, f"Customização: {data['customizacao']}")
+    c.drawString(100, 390, f"TP: {data['tp']}")
+    c.drawString(100, 370, f"Carregador: {data['carregador']}")
+    c.drawString(100, 350, f"Cabo: {data['cabo']}")
+    c.drawString(100, 330, f"Fatura: {data['fatura']}")
+    c.drawString(100, 310, f"Valor: {data['valor']}")
+    c.drawString(100, 290, f"Forma de Pagamento: {data['forma_pagamento']}")
+    c.drawString(100, 270, f"Observações: {data['observacoes']}")
+    c.drawString(100, 250, f"Validação: {data['validacao']}")
     c.save()
 
     # Salvar o PDF no caminho especificado
@@ -489,3 +530,24 @@ def update_requisicao(protocolo, status):
     df = pd.read_excel(requisicao_file)
     df.loc[df['Protocolo'] == protocolo, 'Status'] = status
     df.to_excel(requisicao_file, index=False)
+    
+# Função para ler opções de um arquivo de texto
+def read_options_from_file(file_name):
+    file_path = os.path.join(app.root_path, 'static', 'textos', 'dropdown', f'{file_name}.txt')
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as file:
+            options = [line.strip() for line in file if line.strip()]
+            return options
+    else:
+        return []
+
+# Função para carregar opções de todos os campos
+def load_all_options():
+    campos = {
+        "comercial": read_options_from_file("comercial"),
+        "contrato": read_options_from_file("contrato"),
+        "envio": read_options_from_file("envio"),
+        "modelo": read_options_from_file("modelo"),
+        "customizacao": read_options_from_file("customizacao")
+    }
+    return campos

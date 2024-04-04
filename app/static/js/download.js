@@ -5,7 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const form = this.closest('.download-form');
             const protocolo = form.querySelector('input[name="protocolo"]').value;
             const cliente = form.querySelector('input[name="cliente"]').value;
-            const url = "/download_protocolo"; // Altere para a rota correta
+            const url = "/download_protocolo"; // Modificado para adicionar uma barra
+
+            console.log("Enviando protocolo e cliente:", protocolo, cliente);
 
             fetch(url, {
                 method: 'POST',

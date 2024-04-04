@@ -133,8 +133,9 @@ def aprovar_manutencao(protocolo):
         os.rename(pdf_path, new_pdf_path)
 
         # Envio do e-mail com o PDF anexado
-        email = "dixil78713@fryshare.com"
-        enviar_email_aprovacao(email, new_pdf_path)
+        emails = ["comercial@grupogoldensat.com.br", "inteligencia@grupogoldensat.com.br", "comercial2@grupogoldensat.com.br", "gerentedevendas@grupogoldensat.com.br", "diretoria@grupogoldensat.com.br", "labtecnico@grupogoldensat.com.br", "atendimento@grupogoldensat.com.br"]
+        # emails = ["inteligencia@grupogoldensat.com.br", 'damoge5187@ekposta.com', 'riicodt@gmail.com'] TESTE
+        enviar_email_aprovacao(emails, new_pdf_path)
         
         # Alterar o status da manutenção para "Aprovada"
         update_manutencao(protocolo, "Aprovada")
@@ -296,33 +297,51 @@ FATURAMENTO1 = {
 @login_required
 def requisicoes():
     user_access_level = current_user.get_access_level()
+    
+    # Carregar opções de campos
+    campos = load_all_options()
+    
     if request.method == 'POST':
-        
         protocolo = generate_requisicao_number()
         
         data = {
             "protocolo": protocolo,
             "dateTime": datetime.now().strftime("%d-%m-%Y %H:%M"),
-            "nomeCliente": request.form['nomeCliente'],
-            "motivo": MOTIVOS1.get(request.form['motivo'], ""),
-            "faturamento": FATURAMENTO1.get(request.form['faturamento'], ""),
+            "cnpj": request.form['cnpj'],
+            "inicio_contrato": request.form['inicio_contrato'],
+            "vigencia": request.form['vigencia'],
+            "motivo": request.form['motivo'],
+            "cliente": request.form['cliente'],
+            "comercial": request.form['comercial'],
+            "contrato": request.form['contrato'],
+            "envio": request.form['envio'],
+            "endereco": request.form['endereco'],
+            "ac": request.form['ac'],
+            "email": request.form['email'],
+            "quantidade": request.form['quantidade'],
             "modelo": request.form['modelo'],
             "customizacao": request.form['customizacao'],
-            "tipoProblema": request.form['tipoProblema'],
-            "photos": request.files.getlist('photos'),
-            "tratativa": request.form['tratativa'],
+            "tp": request.form['tp'],
+            "carregador": request.form['carregador'],
+            "cabo": request.form['cabo'],
+            "fatura": request.form['fatura'],
+            "valor": request.form['valor'],
+            "forma_pagamento": request.form['forma_pagamento'],
+            "observacoes": request.form['observacoes'],
+            "validacao": request.form.get('invalidCheck', False),
         }
 
         save_requisicao_to_excel(data)
         
         if generate_requisicao_pdf(data):
             success_message = "Sua requisição foi enviada com sucesso."
-            return render_template('requisicoes.html', success_message=success_message, user_access_level=user_access_level)
+            return render_template('requisicoes.html', success_message=success_message, user_access_level=user_access_level, campos=campos)
         else:
             error_message = "Erro ao gerar o PDF da requisição."
-            return render_template('requisicoes.html', error_message=error_message, user_access_level=user_access_level)
-    else:
-        return render_template('requisicoes.html', success_message=None, user_access_level=user_access_level)
+            return render_template('requisicoes.html', error_message=error_message, user_access_level=user_access_level, campos=campos)
+    
+    # Se não for um POST, apenas renderiza o template com as opções de campos
+    return render_template('requisicoes.html', campos=campos, success_message=None, user_access_level=user_access_level)
 
 # Rota da página de visualização das requisições
 @app.route('/visualizar_requisicoes', methods=['GET', 'POST'])
@@ -409,6 +428,21 @@ def verificar_atualizacao_excel():
     
     except Exception as e:
         return str(e)
+    
+# Rota para retornar a última manutenção
+@app.route('/ultima_manutencao')
+def obter_ultima_manutencao():
+    # Carregar o arquivo Excel
+    df = pd.read_excel('db/registros_manutencao.xlsx')
+
+    # Obter o último protocolo e cliente
+    ultima_manutencao = df.iloc[-1][['Protocolo', 'Nome do Cliente']].to_dict()
+
+    # Converter os valores para tipos nativos do Python
+    ultima_manutencao['Protocolo'] = str(ultima_manutencao['Protocolo'])
+    ultima_manutencao['Nome do Cliente'] = str(ultima_manutencao['Nome do Cliente'])
+
+    return jsonify(ultima_manutencao)
 
 # Rota para erro de login    
 @app.errorhandler(401)

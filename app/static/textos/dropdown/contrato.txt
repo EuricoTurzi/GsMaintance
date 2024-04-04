@@ -1,0 +1,3 @@
+Retornável
+Descartável
+Retornável + Descartável

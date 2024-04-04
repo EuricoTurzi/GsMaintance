@@ -3,8 +3,10 @@
     <a href="{{ url_for('home') }}" class="logo">Grupo GoldenSat</a>
     <ul class="nav-links">
         <li><a href="{{ url_for('home') }}">Formulário Manutenção</a></li>
+        {% if user_access_level >= 2 %}
         <li><a href="{{ url_for('requisicoes') }}">Formulário Requisições</a></li>
         <li><a href="{{ url_for('visualizar_requisicoes') }}">Requisições</a></li>
+        {% endif %}
         {% if user_access_level >= 1 %}
         <li><a href="{{ url_for('visualizar_manutencoes') }}">Manutenções</a></li>
         {% endif %}

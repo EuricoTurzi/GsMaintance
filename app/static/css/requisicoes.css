@@ -56,8 +56,8 @@ h1 {
 
 input[type="text"],
 input[type="number"],
-select,
-input[type="file"] {
+input[type="file"],
+select, .form-select{
     border: 1px solid #000000;
     border-radius: 4px;
     box-sizing: border-box;
@@ -78,7 +78,7 @@ button {
     margin-bottom: 20px;
     padding: 10px;
     width: 100%;
-    transition: background-color 0.3s, color 0.3s, transform 0.3s;
+    transition: background-color 1s, color 1s, transform 1s;
     border: 1px solid #000;
 }
 
@@ -92,7 +92,7 @@ input[type="file"]:focus {
 button:hover {
     background-color: #e6a500;
     color: #fff;
-    transform: scale(1.05);
+    transform: scale(1.04);
 }
 
 input[type="text"][disabled],
@@ -116,7 +116,7 @@ span {
     color: #fdeceb;
 }
 
-.btn {
+.btn-primary {
     padding: 10px 20px;
     background-color: #e6a500;
     color: #fff;
@@ -124,10 +124,14 @@ span {
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
+    border: none;
+    transition: background-color 0.2s, color 0.3s, transform 0.5s;
 }
 
 .btn:hover {
     background-color: #a07302;
+    color: #fff;
+    transform: scale(1.04);
 }
 
 .show {
