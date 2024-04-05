@@ -134,7 +134,6 @@ def aprovar_manutencao(protocolo):
 
         # Envio do e-mail com o PDF anexado
         emails = ["comercial@grupogoldensat.com.br", "inteligencia@grupogoldensat.com.br", "comercial2@grupogoldensat.com.br", "gerentedevendas@grupogoldensat.com.br", "diretoria@grupogoldensat.com.br", "labtecnico@grupogoldensat.com.br", "atendimento@grupogoldensat.com.br"]
-        # emails = ["inteligencia@grupogoldensat.com.br", 'damoge5187@ekposta.com', 'riicodt@gmail.com'] TESTE
         enviar_email_aprovacao(emails, new_pdf_path)
         
         # Alterar o status da manutenção para "Aprovada"
@@ -240,11 +239,24 @@ def visualizar_diretoria():
 @login_required
 def aprovar_diretoria(protocolo):
     user_access_level = current_user.get_access_level()
+    
     acao = request.form.get('acao')
+    cliente = request.form.get('cliente', 'Cliente Desconhecido')
 
     if acao == 'aprovar':
         # Chama a função para registrar a aprovação antes de atualizar o status
         adicionar_data_aprovacao_diretoria(protocolo)
+        
+        pdf_filename = f"{protocolo} - {cliente}.pdf"
+        pdf_path = os.path.join(app.root_path, "static", "protocolos", pdf_filename)
+        print("Caminho do Arquivo PDF:", pdf_path)
+        
+        # Verificar se o arquivo PDF existe
+        if not os.path.isfile(pdf_path):
+            return f"Erro: O arquivo PDF não foi encontrado no caminho: {pdf_path}", 404
+
+        emails = ["inteligencia@grupogoldensat.com.br", 'damoge5187@ekposta.com']
+        send_email_diretoria(emails, pdf_path)
 
         # Ler o arquivo da Diretoria
         arquivo_excel_diretoria = 'db/diretoria.xlsx'
@@ -311,7 +323,7 @@ def requisicoes():
             "inicio_contrato": request.form['inicio_contrato'],
             "vigencia": request.form['vigencia'],
             "motivo": request.form['motivo'],
-            "cliente": request.form['cliente'],
+            "clientereq": request.form['clientereq'],
             "comercial": request.form['comercial'],
             "contrato": request.form['contrato'],
             "envio": request.form['envio'],
@@ -328,7 +340,6 @@ def requisicoes():
             "valor": request.form['valor'],
             "forma_pagamento": request.form['forma_pagamento'],
             "observacoes": request.form['observacoes'],
-            "validacao": request.form.get('invalidCheck', False),
         }
 
         save_requisicao_to_excel(data)
@@ -379,7 +390,7 @@ def aprovar_requisicao(protocolo):
 def download_requisicao():
     data = request.json
     protocolo = data.get('protocolo')
-    cliente = data.get('cliente')
+    cliente = data.get('clientereq')
     
     pdf_filename = f"{protocolo} - {cliente}.pdf"
     pdf_path = os.path.join(app.root_path, "static", "requisicoes", pdf_filename)
@@ -434,6 +445,44 @@ def verificar_atualizacao_excel():
 def obter_ultima_manutencao():
     # Carregar o arquivo Excel
     df = pd.read_excel('db/registros_manutencao.xlsx')
+
+    # Obter o último protocolo e cliente
+    ultima_manutencao = df.iloc[-1][['Protocolo', 'Nome do Cliente']].to_dict()
+
+    # Converter os valores para tipos nativos do Python
+    ultima_manutencao['Protocolo'] = str(ultima_manutencao['Protocolo'])
+    ultima_manutencao['Nome do Cliente'] = str(ultima_manutencao['Nome do Cliente'])
+
+    return jsonify(ultima_manutencao)
+
+# Rota para verificar a atualização do Excel
+@app.route('/verificar_atualizacao_diretoria', methods=['GET'])
+def verificar_atualizacao_diretoria():
+    try:
+        # Caminho para o arquivo Excel
+        excel_file = 'db/diretoria.xlsx'
+        
+        # Verificar se o arquivo ainda não existe ou está vazio
+        if not os.path.exists(excel_file):
+            return "0"  # Retornar 0 se o arquivo não existe
+        
+        # Ler o arquivo Excel
+        registros = pd.read_excel(excel_file)
+        
+        # Obter o número de linhas no arquivo Excel
+        num_linhas = len(registros)
+        
+        # Retornar o número de linhas como uma string
+        return str(num_linhas)
+    
+    except Exception as e:
+        return str(e)
+    
+# Rota para retornar a última manutenção
+@app.route('/ultima_manutencao_diretoria')
+def obter_ultima_manutencao_diretoria():
+    # Carregar o arquivo Excel
+    df = pd.read_excel('db/diretoria.xlsx')
 
     # Obter o último protocolo e cliente
     ultima_manutencao = df.iloc[-1][['Protocolo', 'Nome do Cliente']].to_dict()

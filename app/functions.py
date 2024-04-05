@@ -73,7 +73,8 @@ def send_email_with_attachment(emails, pdf_path):
         Prezados,
         Gostaria de informar que a manutenção referente ao equipamento foi concluída conforme agendado.
                     
-        Anexei ao presente e-mail o protocolo de manutenção detalhando todas as atividades realizadas, as condições atuais do equipamento e quaisquer recomendações relevantes para garantir seu pleno funcionamento.
+        Anexei ao presente e-mail o protocolo de manutenção detalhando todas as atividades realizadas, as condições atuais do equipamento e quaisquer recomendações relevantes para garantir seu pleno 
+        funcionamento.
                     
         Caso venham a surgir dúvidas, estou à disposição para esclarecê-las.
                     
@@ -81,6 +82,40 @@ def send_email_with_attachment(emails, pdf_path):
                     
         Guilherme Amarante
         Laboratório Técnico
+        '''
+        
+        # Obter apenas o nome do arquivo a partir do caminho completo
+        pdf_filename = os.path.basename(pdf_path)
+        
+        with app.open_resource(pdf_path) as pdf:
+            msg.attach(pdf_filename, 'application/pdf', pdf.read())
+
+        try:
+            mail.send(msg)
+            print("E-mail enviado com sucesso para:", emails)
+        except Exception as e:
+            print("Erro ao enviar e-mail para", str(e))
+            
+# Funções para o Flask-Mail
+def send_email_diretoria(emails, pdf_path):
+        msg = Message('Aprovação de Manutenção - Diretoria',
+                    sender='seu_email@gmail.com',
+                    recipients=[emails[0]])
+        msg.cc = emails[1:]
+        
+        msg.body = '''
+        Prezados,
+        Gostaria de informar que a manutenção do equipamento foi realizada pelo nosso laboratório técnico, sem custo, e foi devidamente aprovada junto ao Presidente da empresa.
+
+        Anexado a este e-mail, vocês encontrarão o protocolo de manutenção detalhando todas as atividades executadas, as atuais condições do equipamento e quaisquer recomendações pertinentes para assegurar seu 
+        pleno funcionamento.
+
+        Em caso de dúvidas ou necessidade de esclarecimentos adicionais, estou à disposição.
+
+        Atenciosamente,
+
+        Alison Gardão
+        Diretor Operacional
         '''
         
         # Obter apenas o nome do arquivo a partir do caminho completo
@@ -414,20 +449,6 @@ def get_faturamento_from_protocolo(protocolo):
 def enviar_email_aprovacao(email, pdf_path):
     send_email_with_attachment(email, pdf_path)
     
-def get_next_protocol_number():
-    protocolo_file = 'db/protocolo_counter.txt'
-    next_number = 1
-
-    if os.path.exists(protocolo_file):
-        with open(protocolo_file, 'r') as f:
-            next_number = int(f.read())
-            next_number += 1
-
-    with open(protocolo_file, 'w') as f:
-        f.write(str(next_number))
-
-    return next_number
-    
 # Função para gerar o número da requisição
 def generate_requisicao_number():
     now = datetime.now()
@@ -446,7 +467,7 @@ def save_requisicao_to_excel(data):
         "Início de Contrato": [data["inicio_contrato"]],
         "Vigência": [data["vigencia"]],
         "Motivo": [data["motivo"]],
-        "Cliente": [data["cliente"]],
+        "Cliente": [data["clientereq"]],
         "Comercial": [data["comercial"]],
         "Contrato": [data["contrato"]],
         "Envio": [data["envio"]],
@@ -463,7 +484,6 @@ def save_requisicao_to_excel(data):
         "Valor": [data["valor"]],
         "Forma de Pagamento": [data["forma_pagamento"]],
         "Observações": [data["observacoes"]],
-        "Validação": [data["validacao"]],
         "Status": "Em Aberto"
     })
 
@@ -486,20 +506,20 @@ def get_requisicoes():
 # Função para gerar o PDF da requisição
 def generate_requisicao_pdf(data):
     # Caminho e nome do arquivo PDF
-    pdf_filename = f"{data['protocolo']} - {data['cliente']}.pdf"
+    pdf_filename = f"{data['protocolo']} - {data['clientereq']}.pdf"
     pdf_path = os.path.join(app.root_path, "static/requisicoes", pdf_filename)
 
     # Criação do PDF com reportlab
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
-    c.drawString(100, 750, "Protocolo de Requisição")
-    c.drawString(100, 730, f"Protocolo: {data['protocolo']}")
+    c.drawString(100, 730, "Protocolo de Requisição")
+    c.drawString(100, 710, f"Protocolo: {data['protocolo']}")
     c.drawString(100, 690, f"Data: {data['dateTime']}")
     c.drawString(100, 670, f"CNPJ: {data['cnpj']}")
     c.drawString(100, 650, f"Início de Contrato: {data['inicio_contrato']}")
     c.drawString(100, 630, f"Vigência: {data['vigencia']}")
     c.drawString(100, 610, f"Motivo: {data['motivo']}")
-    c.drawString(100, 590, f"Cliente: {data['cliente']}")
+    c.drawString(100, 590, f"Cliente: {data['clientereq']}")
     c.drawString(100, 570, f"Comercial: {data['comercial']}")
     c.drawString(100, 550, f"Contrato: {data['contrato']}")
     c.drawString(100, 530, f"Envio: {data['envio']}")
